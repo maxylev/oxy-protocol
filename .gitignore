@@ -1,0 +1,26 @@
+# ---- secrets & environment ----
+# NEVER commit .env: it can contain live API keys.
+.env
+.env.*
+!.env.example
+
+# ---- dependencies ----
+node_modules/
+
+# ---- runtime data (rooms, event logs, state) ----
+.oxy-data/
+data/
+*.room/
+
+# ---- logs ----
+*.log
+npm-debug.log*
+
+# ---- npm packaging ----
+*.tgz
+
+# ---- OS / editors ----
+.DS_Store
+*.swp
+.idea/
+.vscode/

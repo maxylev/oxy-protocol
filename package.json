@@ -1,0 +1,55 @@
+{
+  "name": "oxy-protocol",
+  "version": "1.0.1",
+  "description": "Oxana Universal Group Agent Protocol 1.0 — single-file multi-device AI group chat server and dark web UI",
+  "type": "module",
+  "main": "./oxy-protocol.js",
+  "exports": "./oxy-protocol.js",
+  "bin": {
+    "oxy-protocol": "./oxy-protocol.js"
+  },
+  "files": [
+    "oxy-protocol.js",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "start": "node oxy-protocol.js",
+    "check": "node --check oxy-protocol.js",
+    "test": "node --test",
+    "test:live": "OXY_LIVE_TEST=1 node --env-file-if-exists=.env --test test/live-ai.test.js",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "fmt": "prettier --write .",
+    "fmt:check": "prettier --check .",
+    "prepublishOnly": "npm run check && npm run lint && npm run fmt:check && npm test"
+  },
+  "engines": {
+    "node": ">=24"
+  },
+  "dependencies": {
+    "ajv": "^8.20.0"
+  },
+  "keywords": [
+    "ai",
+    "group-chat",
+    "multi-user",
+    "agent",
+    "openai",
+    "openrouter",
+    "realtime",
+    "protocol",
+    "sse"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com:maxylev/oxy-protocol.git"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.10.0",
+    "globals": "^17.12.0",
+    "prettier": "^3.9.6"
+  }
+}

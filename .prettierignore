@@ -1,0 +1,4 @@
+node_modules/
+*.tgz
+# The protocol specification is canonical text; format churn adds no value there.
+SPEC.md
