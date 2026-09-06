@@ -2,6 +2,8 @@
 
 A single-file Node.js reference server for **Oxana Universal Group Agent Protocol 1.0**.
 
+![oxy-protocol chat UI](scr.png)
+
 Run a durable multi-device group chat with a dark responsive web UI, an OpenAI-compatible AI participant, semantic `SPEAK / SILENT` participation, tool/capability execution, asynchronous Operations, request freshness checks, and headroom-based context checkpointing.
 
 ```bash

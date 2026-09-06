@@ -48,7 +48,7 @@ function loadDotEnv(file = '.env') {
 }
 loadDotEnv();
 
-const VERSION = '1.0.2';
+const VERSION = '1.0.3';
 const PROTOCOL = 'oxy/1.0';
 const PUBLIC_AUDIENCE = Object.freeze({ kind: 'session-public' });
 const HIDDEN_AUDIENCE = Object.freeze({ kind: 'not-model-visible' });
