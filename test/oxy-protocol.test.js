@@ -511,60 +511,52 @@ describe('config derivation', () => {
     }
   }
 
-  test('OXY_API_KEY + OXY_MODEL configure the model (primary chain)', async () => {
+  test('OPENAI_* environment variables configure the model', async () => {
     await withEnv(
       {
-        OXY_API_KEY: 'sk-oxy-primary',
-        OXY_MODEL: 'oxy/primary-model',
-        OXY_BASE_URL: 'https://oxy.example/v1',
+        OPENAI_API_KEY: 'sk-test-primary',
+        OPENAI_MODEL: 'openai/gpt-4.1-mini',
+        OPENAI_BASE_URL: 'https://api.openai.com/v1',
       },
       async () => {
         const { app } = await startServer({}); // no explicit options → env path
         assert.equal(app.config.apiKey, '[configured]');
-        assert.equal(app.config.model, 'oxy/primary-model');
-        assert.equal(app.config.baseUrl, 'https://oxy.example/v1');
+        assert.equal(app.config.model, 'openai/gpt-4.1-mini');
+        assert.equal(app.config.baseUrl, 'https://api.openai.com/v1');
         assert.equal(app.config.aiConfigured, true);
       },
     );
   });
 
-  test('OPENROUTER_API_KEY is the key fallback and sets the OpenRouter base URL', async () => {
-    await withEnv({ OPENROUTER_API_KEY: 'sk-or', OXY_MODEL: 'openai/gpt-5.6-luna' }, async () => {
+  test('OPENAI_BASE_URL defaults to OpenAI when unset', async () => {
+    await withEnv({ OPENAI_API_KEY: 'sk-test', OPENAI_MODEL: 'my/model' }, async () => {
       const { app } = await startServer({});
-      assert.equal(app.config.apiKey, '[configured]');
-      assert.equal(app.config.model, 'openai/gpt-5.6-luna');
-      assert.equal(app.config.baseUrl, 'https://openrouter.ai/api/v1');
-    });
-  });
-
-  test('OPENAI_API_KEY is the last key fallback with the OpenAI default base URL', async () => {
-    await withEnv({ OPENAI_API_KEY: 'sk-openai', OXY_MODEL: 'my/model' }, async () => {
-      const { app } = await startServer({});
-      assert.equal(app.config.apiKey, '[configured]');
       assert.equal(app.config.model, 'my/model');
       assert.equal(app.config.baseUrl, 'https://api.openai.com/v1');
     });
   });
 
-  test('OXY_BASE_URL overrides provider-derived defaults', async () => {
-    await withEnv({ OXY_API_KEY: 'sk-oxy', OXY_MODEL: 'm', OXY_BASE_URL: 'https://gateway.example/v1' }, async () => {
-      const { app } = await startServer({});
-      assert.equal(app.config.baseUrl, 'https://gateway.example/v1');
-    });
-  });
-
-  test('no OXY_MODEL means AI is not configured', async () => {
-    await withEnv({ OPENAI_API_KEY: 'sk-openai' }, async () => {
-      const { app } = await startServer({});
-      assert.equal(app.config.model, null);
-      assert.equal(app.config.aiConfigured, false);
-      assert.equal(app.config.publicModelName, 'disabled');
-    });
-  });
-
-  test('programmatic options override environment variables', async () => {
+  test('legacy OXY_* and OPENROUTER_* variables are ignored', async () => {
     await withEnv(
-      { OXY_API_KEY: 'sk-env', OXY_MODEL: 'env/model', OXY_BASE_URL: 'https://env.example/v1' },
+      {
+        OXY_API_KEY: 'sk-oxy-legacy',
+        OXY_MODEL: 'oxy/legacy-model',
+        OXY_BASE_URL: 'https://oxy.example/v1',
+        OPENROUTER_API_KEY: 'sk-or-legacy',
+      },
+      async () => {
+        const { app } = await startServer({});
+        assert.equal(app.config.model, null, 'OXY_MODEL must not configure the model');
+        assert.equal(app.config.baseUrl, 'https://api.openai.com/v1', 'legacy base URLs must be ignored');
+        assert.equal(app.config.apiKey, null, 'legacy keys must be ignored');
+        assert.equal(app.config.aiConfigured, false);
+      },
+    );
+  });
+
+  test('programmatic options override OPENAI_* environment variables', async () => {
+    await withEnv(
+      { OPENAI_API_KEY: 'sk-env', OPENAI_MODEL: 'env/model', OPENAI_BASE_URL: 'https://env.example/v1' },
       async () => {
         const { app } = await startServer({
           apiKey: 'sk-option',

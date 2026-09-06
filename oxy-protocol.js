@@ -20,7 +20,35 @@ import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import Ajv2020 from 'ajv/dist/2020.js';
 
-const VERSION = '1.0.1';
+/**
+ * Minimal zero-dependency .env loader (dotenv-style, no external package).
+ * - Only reads `.env` from the current working directory when present.
+ * - Existing process environment variables always win.
+ * - Supports `KEY=value`, `KEY=quoted value`, `#` comments, blank lines.
+ */
+function loadDotEnv(file = '.env') {
+  try {
+    const raw = fs.readFileSync(file, 'utf8');
+    for (const line of raw.split('\n')) {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith('#')) continue;
+      const match = trimmed.match(/^([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)$/);
+      if (!match) continue;
+      const key = match[1];
+      if (process.env[key] !== undefined) continue;
+      let value = match[2].trim();
+      if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+        value = value.slice(1, -1);
+      }
+      process.env[key] = value;
+    }
+  } catch {
+    // No .env file — rely on the real environment.
+  }
+}
+loadDotEnv();
+
+const VERSION = '1.0.2';
 const PROTOCOL = 'oxy/1.0';
 const PUBLIC_AUDIENCE = Object.freeze({ kind: 'session-public' });
 const HIDDEN_AUDIENCE = Object.freeze({ kind: 'not-model-visible' });
@@ -1649,21 +1677,16 @@ function parseCli(argv) {
 
 function printHelp() {
   console.log(
-    `oxy-protocol ${VERSION}\n\nUsage:\n  npx oxy-protocol [options]\n\nOptions:\n  --host <host>       Bind host (default 0.0.0.0)\n  --port <port>       HTTP port (default 8787)\n  --data <dir>        Data directory (default ~/.oxy-protocol)\n  --model <model>     OpenAI-compatible model id\n  --base-url <url>    OpenAI-compatible /v1 base URL\n  --room <id>         Room shown in startup URL (default general)\n  --no-ai             Start chat UI without model calls\n  -v, --version       Print version\n  -h, --help          Print help\n\nEnvironment:\n  OXY_API_KEY / OPENROUTER_API_KEY / OPENAI_API_KEY\n  OXY_MODEL\n  OXY_BASE_URL\n  OXY_PARTICIPATION_MODEL\n  OXY_COMPACTION_MODEL\n  OXY_AGENT_NAME\n  OXY_ACCESS_TOKEN\n  OXY_ADMIN_TOKEN\n  OXY_DATA_DIR\n  PORT / HOST\n`,
+    `oxy-protocol ${VERSION}\n\nUsage:\n  npx oxy-protocol [options]\n\nOptions:\n  --host <host>       Bind host (default 0.0.0.0)\n  --port <port>       HTTP port (default 8787)\n  --data <dir>        Data directory (default ~/.oxy-protocol)\n  --model <model>     OpenAI-compatible model id\n  --base-url <url>    OpenAI-compatible /v1 base URL\n  --room <id>         Room shown in startup URL (default general)\n  --no-ai             Start chat UI without model calls\n  -v, --version       Print version\n  -h, --help          Print help\n\nEnvironment:\n  OPENAI_API_KEY\n  OPENAI_BASE_URL\n  OPENAI_MODEL\n  OXY_PARTICIPATION_MODEL\n  OXY_COMPACTION_MODEL\n  OXY_AGENT_NAME\n  OXY_ACCESS_TOKEN\n  OXY_ADMIN_TOKEN\n  OXY_DATA_DIR\n  PORT / HOST\n`,
   );
 }
 
 function deriveConfig(options = {}, cli = {}) {
   const env = process.env;
-  const openRouterKey = env.OPENROUTER_API_KEY;
-  const openAiKey = env.OPENAI_API_KEY;
-  const apiKey = options.apiKey ?? env.OXY_API_KEY ?? openRouterKey ?? openAiKey ?? null;
-  const baseUrl =
-    options.baseUrl ??
-    cli.baseUrl ??
-    env.OXY_BASE_URL ??
-    (openRouterKey ? 'https://openrouter.ai/api/v1' : 'https://api.openai.com/v1');
-  const model = options.model ?? cli.model ?? env.OXY_MODEL ?? null;
+  // Standard OpenAI-compatible naming is the single source for key/base/model.
+  const apiKey = options.apiKey ?? env.OPENAI_API_KEY ?? null;
+  const baseUrl = options.baseUrl ?? cli.baseUrl ?? env.OPENAI_BASE_URL ?? 'https://api.openai.com/v1';
+  const model = options.model ?? cli.model ?? env.OPENAI_MODEL ?? null;
   const noAi = options.noAi ?? cli.noAi ?? env.OXY_NO_AI === '1';
   const aiConfigured = Boolean(!noAi && apiKey && model);
   const agentName = options.agentName ?? env.OXY_AGENT_NAME ?? 'Oxy';
@@ -2124,7 +2147,7 @@ async function runCli() {
   console.log(`\n  OXY PROTOCOL ${VERSION}`);
   console.log(`  ${PROTOCOL} · Node ${process.version}`);
   console.log(`  data: ${config.dataDir}`);
-  console.log(`  AI: ${config.aiConfigured ? config.publicModelName : 'disabled (set OXY_API_KEY + OXY_MODEL)'}`);
+  console.log(`  AI: ${config.aiConfigured ? config.publicModelName : 'disabled (set OPENAI_API_KEY + OPENAI_MODEL)'}`);
   if (config.accessToken) console.log('  access: shared access key enabled');
   console.log('');
   for (const u of localUrls(config.host, config.port, defaultRoom)) console.log(`  ${u}`);

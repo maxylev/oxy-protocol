@@ -1,6 +1,6 @@
 {
   "name": "oxy-protocol",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Oxana Universal Group Agent Protocol 1.0 — single-file multi-device AI group chat server and dark web UI",
   "type": "module",
   "main": "./oxy-protocol.js",

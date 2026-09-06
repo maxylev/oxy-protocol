@@ -79,42 +79,44 @@ Open the same URL from another phone/laptop on the network and choose a differen
 
 ## 2. OpenRouter
 
+OpenRouter is an OpenAI-compatible endpoint, so it uses the same standard
+variables — point `OPENAI_BASE_URL` at OpenRouter and use any valid route as
+`OPENAI_MODEL`:
+
 ```bash
-export OPENROUTER_API_KEY="..."
-export OXY_MODEL="openai/gpt-5.6-luna"
+export OPENAI_API_KEY="sk-or-v1-..."
+export OPENAI_BASE_URL="https://openrouter.ai/api/v1"
+export OPENAI_MODEL="openai/gpt-5.6-luna"
 
 npx oxy-protocol
 ```
 
-Or explicitly:
+Alternative to exporting variables: create a `.env` file in the project folder
+(`cp .env.example .env`) — the server loads it automatically. **Never commit
+`.env`.**
 
-```bash
-export OXY_API_KEY="..."
-export OXY_BASE_URL="https://openrouter.ai/api/v1"
-export OXY_MODEL="your/provider-model"
-
-npx oxy-protocol
-```
-
-`OXY_MODEL` is intentionally not hardcoded by the package. Choose a route that has been certified for your use case.
+The model route is intentionally not hardcoded by the package. Choose a route
+that has been certified for your use case.
 
 ---
 
 ## 3. OpenAI-compatible endpoint
 
+Defaults to the official OpenAI endpoint:
+
 ```bash
 export OPENAI_API_KEY="..."
-export OXY_MODEL="your-model"
+export OPENAI_MODEL="your-model"
 
-npx oxy-protocol --base-url https://api.openai.com/v1
+npx oxy-protocol
 ```
 
-For another compatible service:
+For another compatible service, set the base URL explicitly:
 
 ```bash
-OXY_API_KEY="..." \
-OXY_BASE_URL="https://llm.example.com/v1" \
-OXY_MODEL="my-model" \
+OPENAI_API_KEY="..." \
+OPENAI_BASE_URL="https://llm.example.com/v1" \
+OPENAI_MODEL="my-model" \
 npx oxy-protocol
 ```
 
@@ -156,36 +158,43 @@ http://localhost:9000/?room=product-team
 
 # Environment variables
 
-| Variable                     | Purpose                                              | Default                                                       |
-| ---------------------------- | ---------------------------------------------------- | ------------------------------------------------------------- |
-| `OXY_API_KEY`                | Preferred OpenAI-compatible API key                  | unset                                                         |
-| `OPENROUTER_API_KEY`         | Used if `OXY_API_KEY` is absent                      | unset                                                         |
-| `OPENAI_API_KEY`             | Used if the two above are absent                     | unset                                                         |
-| `OXY_MODEL`                  | Main model route                                     | **required for AI**                                           |
-| `OXY_BASE_URL`               | OpenAI-compatible `/v1` URL                          | OpenRouter when `OPENROUTER_API_KEY` exists, otherwise OpenAI |
-| `OXY_PARTICIPATION_MODEL`    | Optional cheaper/faster semantic participation route | `OXY_MODEL`                                                   |
-| `OXY_COMPACTION_MODEL`       | Optional checkpoint summarizer route                 | `OXY_MODEL`                                                   |
-| `OXY_AGENT_NAME`             | Visible AI name                                      | `Oxy`                                                         |
-| `OXY_ACCESS_TOKEN`           | Shared access gate for room APIs                     | unset                                                         |
-| `OXY_ADMIN_TOKEN`            | Enables async-operation completion HTTP endpoint     | unset                                                         |
-| `OXY_DATA_DIR`               | Persistent data directory                            | `~/.oxy-protocol`                                             |
-| `OXY_CONTEXT_LIMIT`          | Provider context limit used for budget guard         | `32000`                                                       |
-| `OXY_WORKING_CONTEXT_LIMIT`  | Product working limit                                | `32000`                                                       |
-| `OXY_OUTPUT_RESERVE`         | Reserved output tokens                               | `2200`                                                        |
-| `OXY_SAFETY_RESERVE`         | Context safety reserve                               | `1800`                                                        |
-| `OXY_NEXT_TURN_RESERVE`      | Reserve for the next realistic turn/tool cycle       | `2200`                                                        |
-| `OXY_POST_COMPACTION_TARGET` | Desired compacted working size                       | `15000`                                                       |
-| `OXY_RECENT_TAIL_EVENTS`     | Approximate recent verbatim Event tail               | `36`                                                          |
-| `OXY_MAX_OUTPUT_TOKENS`      | Main model output limit                              | `1200`                                                        |
-| `OXY_MAX_TOOL_STEPS`         | Tool-loop safety bound                               | `6`                                                           |
-| `OXY_MAX_MESSAGE_CHARS`      | Per-message character limit                          | `8000`                                                        |
-| `OXY_TEMPERATURE`            | Main generation temperature                          | `0.35`                                                        |
-| `OXY_MODEL_TIMEOUT_MS`       | Model HTTP timeout                                   | `120000`                                                      |
-| `OXY_HTTP_REFERER`           | Optional OpenRouter-style HTTP referrer header       | unset                                                         |
-| `OXY_APP_TITLE`              | Optional provider application title header           | `Oxy Protocol`                                                |
-| `OXY_COOKIE_SECURE`          | Add `Secure` to temporary access-session cookie      | `0`                                                           |
-| `PORT`                       | HTTP port fallback                                   | `8787`                                                        |
-| `HOST`                       | Bind host fallback                                   | `0.0.0.0`                                                     |
+If a `.env` file exists in the working directory it is loaded automatically at
+startup — no `dotenv` dependency required. Real environment variables always
+win over `.env` values. Copy `.env.example` and fill it in; **never commit
+`.env`** (it is gitignored, but secrets stay local).
+
+Standard OpenAI-compatible naming is the single source for the model
+connection; OpenRouter and any other compatible gateway work through the same
+three variables.
+
+| Variable                     | Purpose                                              | Default                     |
+| ---------------------------- | ---------------------------------------------------- | --------------------------- |
+| `OPENAI_API_KEY`             | OpenAI-compatible API key                            | unset                       |
+| `OPENAI_MODEL`               | Main model route                                     | **required for AI**         |
+| `OPENAI_BASE_URL`            | OpenAI-compatible `/v1` URL                          | `https://api.openai.com/v1` |
+| `OXY_PARTICIPATION_MODEL`    | Optional cheaper/faster semantic participation route | `OPENAI_MODEL`              |
+| `OXY_COMPACTION_MODEL`       | Optional checkpoint summarizer route                 | `OPENAI_MODEL`              |
+| `OXY_AGENT_NAME`             | Visible AI name                                      | `Oxy`                       |
+| `OXY_ACCESS_TOKEN`           | Shared access gate for room APIs                     | unset                       |
+| `OXY_ADMIN_TOKEN`            | Enables async-operation completion HTTP endpoint     | unset                       |
+| `OXY_DATA_DIR`               | Persistent data directory                            | `~/.oxy-protocol`           |
+| `OXY_CONTEXT_LIMIT`          | Provider context limit used for budget guard         | `32000`                     |
+| `OXY_WORKING_CONTEXT_LIMIT`  | Product working limit                                | `32000`                     |
+| `OXY_OUTPUT_RESERVE`         | Reserved output tokens                               | `2200`                      |
+| `OXY_SAFETY_RESERVE`         | Context safety reserve                               | `1800`                      |
+| `OXY_NEXT_TURN_RESERVE`      | Reserve for the next realistic turn/tool cycle       | `2200`                      |
+| `OXY_POST_COMPACTION_TARGET` | Desired compacted working size                       | `15000`                     |
+| `OXY_RECENT_TAIL_EVENTS`     | Approximate recent verbatim Event tail               | `36`                        |
+| `OXY_MAX_OUTPUT_TOKENS`      | Main model output limit                              | `1200`                      |
+| `OXY_MAX_TOOL_STEPS`         | Tool-loop safety bound                               | `6`                         |
+| `OXY_MAX_MESSAGE_CHARS`      | Per-message character limit                          | `8000`                      |
+| `OXY_TEMPERATURE`            | Main generation temperature                          | `0.35`                      |
+| `OXY_MODEL_TIMEOUT_MS`       | Model HTTP timeout                                   | `120000`                    |
+| `OXY_HTTP_REFERER`           | Optional OpenRouter-style HTTP referrer header       | unset                       |
+| `OXY_APP_TITLE`              | Optional provider application title header           | `Oxy Protocol`              |
+| `OXY_COOKIE_SECURE`          | Add `Secure` to temporary access-session cookie      | `0`                         |
+| `PORT`                       | HTTP port fallback                                   | `8787`                      |
+| `HOST`                       | Bind host fallback                                   | `0.0.0.0`                   |
 
 ### Recommended 32k profile
 
@@ -444,9 +453,9 @@ import { createOxyServer, defineCapability } from 'oxy-protocol';
 
 const app = await createOxyServer({
   port: 8787,
-  apiKey: process.env.OPENROUTER_API_KEY,
-  baseUrl: 'https://openrouter.ai/api/v1',
-  model: process.env.OXY_MODEL,
+  apiKey: process.env.OPENAI_API_KEY,
+  baseUrl: process.env.OPENAI_BASE_URL,
+  model: process.env.OPENAI_MODEL,
   role: {
     role_id: 'team-facilitator',
     revision: 1,
@@ -892,7 +901,7 @@ npm run check
 
 Before exposing a deployment beyond localhost/LAN:
 
-- [ ] set a tested `OXY_MODEL`;
+- [ ] set a tested `OPENAI_MODEL`;
 - [ ] configure a real provider token policy;
 - [ ] run HTTPS;
 - [ ] add real participant authentication/ACLs;
